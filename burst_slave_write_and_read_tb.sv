@@ -82,7 +82,7 @@ module burst_slave_write_and_read_tb ;
 
 	task read_data(input bit [3:0] num);
 		for (int i = 0; i < num; i++) begin
-			if(address) begin
+			if(waitrequest) begin
 				beginbursttransfer = beginbursttransfer;
 				burstcount = burstcount;
 				read = read;
