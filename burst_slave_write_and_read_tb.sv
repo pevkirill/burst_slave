@@ -10,8 +10,9 @@ module burst_slave_write_and_read_tb ;
 	logic [31:0] readdata          ;
 	logic        readdatavalid     ;
 	logic [4:0]  burstcount        ;
+	logic        waitrequest       ;
 
-	logic [16:0][31:0] memory;
+	logic [15:0][31:0] memory;
 
 	always #13 clk=~clk;
 
@@ -63,23 +64,36 @@ module burst_slave_write_and_read_tb ;
 
 	task write_data(input bit [4:0] num);
 		for (int i = 0; i < num; i++) begin
-			writedata = memory[i];
-			write = '1;
-			wait_clocks(1);
-			address = '0;
-			writedata = '0;
-			burstcount = 5'd0;
-			beginbursttransfer = 0;
+			if(waitrequest) begin
+				beginbursttransfer = beginbursttransfer;
+				burstcount = burstcount;
+				address = address;
+			end else begin
+				writedata = memory[i];
+				write = '1;
+				wait_clocks(1);
+				address = '0;
+				writedata = '0;
+				burstcount = 5'd0;
+				beginbursttransfer = 0;
+			end
 		end
 	endtask : write_data
 
 	task read_data(input bit [3:0] num);
 		for (int i = 0; i < num; i++) begin
-			wait_clocks(1);
-			address = '0;
-			burstcount = 4'h0;
-			read = '0;
-			beginbursttransfer = 0;
+			if(address) begin
+				beginbursttransfer = beginbursttransfer;
+				burstcount = burstcount;
+				read = read;
+				address = address;
+			end else begin
+				wait_clocks(1);
+				address = '0;
+				burstcount = 4'h0;
+				read = '0;
+				beginbursttransfer = 0;
+			end
 		end
 	endtask : read_data
 
@@ -96,7 +110,7 @@ module burst_slave_write_and_read_tb ;
 		.avms_writedata         (writedata         ),
 		.avms_readdatavalid     (readdatavalid     ),
 		.avms_readdata          (readdata          ),
-		.avms_waitrequest       (                  )
+		.avms_waitrequest       (waitrequest       )
 	);
 
 endmodule
